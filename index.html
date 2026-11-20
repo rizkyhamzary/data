@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Validator Kualitas Desain Konten Instagram</title>
+  <script src="data.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      position: sticky; top: 0; z-index: 100;
+    }
+    header h1 { font-size: 1.1rem; font-weight: 700; line-height: 1.3; max-width: 500px; }
+    header small { font-size: 0.72rem; opacity: 0.75; display: block; margin-top: 2px; }
+
+    .header-stats {
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .stat-pill {
+      background: rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .stat-pill span { font-weight: 700; }
+
+    /* ─── PROGRESS BAR ─── */
+    .progress-wrap {
+      background: #1e293b;
+      padding: 10px 24px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .progress-bar-outer {
+      flex: 1; height: 8px; background: #334155; border-radius: 4px; overflow: hidden;
+    }
+    .progress-bar-inner {
+      height: 100%; background: linear-gradient(90deg,#22c55e,#16a34a);
+      border-radius: 4px; transition: width 0.3s;
+    }
+    .progress-label { font-size: 0.8rem; color: #94a3b8; min-width: 90px; text-align: right; }
+
+    /* ─── MAIN LAYOUT ─── */
+    main {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 0;
+      height: calc(100vh - 120px);
+    }
+
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; height: auto; }
+    }
+
+    /* ─── LEFT: IMAGE PANEL ─── */
+    .image-panel {
+      display: flex;
+      flex-direction: column;
+      background: #0f172a;
+      border-right: 1px solid #1e293b;
+      overflow: hidden;
+    }
+
+    .image-nav {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+    }
+    .image-nav button {
+      background: #334155; color: #e2e8f0;
+      border: none; border-radius: 6px;
+      padding: 6px 14px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600;
+      transition: background 0.15s;
+    }
+    .image-nav button:hover { background: #475569; }
+    .image-nav button:disabled { opacity: 0.35; cursor: not-allowed; }
+    .image-nav .nav-info { flex: 1; text-align: center; }
+    .image-nav .nav-info strong { font-size: 1rem; }
+    .image-nav .nav-info small { display: block; font-size: 0.72rem; color: #94a3b8; }
+
+    .jump-wrap {
+      display: flex; align-items: center; gap: 6px; margin-left: auto;
+    }
+    .jump-wrap input {
+      width: 60px; padding: 4px 6px;
+      background: #0f172a; border: 1px solid #334155;
+      border-radius: 6px; color: #e2e8f0;
+      text-align: center; font-size: 0.85rem;
+    }
+    .jump-wrap button {
+      padding: 5px 10px; font-size: 0.8rem;
+    }
+
+    .image-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #090f1a;
+      position: relative;
+      cursor: zoom-in;
+    }
+    .image-container.zoomed { cursor: zoom-out; }
+
+    #mainImage {
+      max-width: 100%; max-height: 100%;
+      object-fit: contain;
+      transition: transform 0.2s;
+      user-select: none;
+    }
+
+    .image-info-bar {
+      padding: 8px 16px;
+      background: #1e293b;
+      border-top: 1px solid #334155;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .image-info-bar .file-name { font-size: 0.75rem; color: #94a3b8; word-break: break-all; }
+    .image-info-bar .cat-badge {
+      font-size: 0.72rem; font-weight: 700;
+      padding: 2px 8px; border-radius: 10px;
+      flex-shrink: 0; margin-left: 8px;
+    }
+    .cat-badge.cat-organisasi { background: #1d4ed8; color: #fff; }
+    .cat-badge.cat-umkm { background: #d97706; color: #fff; }
+    .cat-badge.cat-umum { background: #475569; color: #fff; }
+
+    /* ─── VALIDATED CHECKMARK on nav ─── */
+    .nav-validated {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #166534; color: #86efac;
+      padding: 2px 8px; border-radius: 10px;
+      font-size: 0.72rem; font-weight: 700; margin-left: 6px;
+    }
+
+    /* ─── RIGHT: FORM PANEL ─── */
+    .form-panel {
+      display: flex; flex-direction: column;
+      background: #111827;
+      overflow-y: auto;
+    }
+
+    .form-inner { padding: 20px 18px; display: flex; flex-direction: column; gap: 18px; }
+
+    .rubrik-toggle {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .rubrik-header {
+      padding: 10px 14px; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.85rem; font-weight: 600;
+    }
+    .rubrik-header:hover { background: #263548; }
+    .rubrik-header svg { transition: transform 0.2s; }
+    .rubrik-header.open svg { transform: rotate(180deg); }
+    .rubrik-body { display: none; padding: 12px 14px; border-top: 1px solid #334155; }
+    .rubrik-body.show { display: block; }
+
+    /* Rubrik: layout kartu vertikal per-indikator */
+    .rubrik-cards { display: flex; flex-direction: column; gap: 10px; }
+    .rubrik-card { border: 1px solid #334155; border-radius: 8px; overflow: hidden; }
+    .rubrik-card-title {
+      background: #1a2a4a; color: #93c5fd;
+      font-size: 0.78rem; font-weight: 700;
+      padding: 6px 10px;
+    }
+    .rubrik-score-row {
+      display: flex; align-items: flex-start;
+      padding: 5px 10px; gap: 8px;
+      border-top: 1px solid #1e293b;
+      font-size: 0.72rem; line-height: 1.4;
+    }
+    .rubrik-score-row:nth-child(even) { background: rgba(255,255,255,0.03); }
+    .rubrik-skor-badge {
+      flex-shrink: 0; width: 22px; height: 22px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.75rem;
+    }
+    .rb-s5 { background:#052e16; color:#4ade80; }
+    .rb-s4 { background:#1a2e05; color:#a3e635; }
+    .rb-s3 { background:#422006; color:#fbbf24; }
+    .rb-s2 { background:#431407; color:#fb923c; }
+    .rb-s1 { background:#450a0a; color:#f87171; }
+    .rubrik-score-desc { color: #cbd5e1; flex: 1; }
+
+    /* ─── SCORE INDICATORS ─── */
+    .indicators-section { display: flex; flex-direction: column; gap: 14px; }
+    .indicator-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .indicator-title {
+      font-size: 0.85rem; font-weight: 700;
+      margin-bottom: 10px; color: #93c5fd;
+    }
+    .score-buttons {
+      display: flex; gap: 6px;
+    }
+    .score-btn {
+      flex: 1;
+      padding: 10px 4px;
+      border: 2px solid #334155;
+      border-radius: 8px;
+      background: #0f172a;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 700;
+      text-align: center;
+      transition: all 0.15s;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    .score-btn small { font-size: 0.6rem; font-weight: 400; color: #64748b; }
+    .score-btn:hover { border-color: #60a5fa; color: #93c5fd; }
+    .score-btn.selected { border-color: #3b82f6; background: #1e3a8a; color: #fff; }
+    .score-btn.selected small { color: #93c5fd; }
+    .score-btn.s1.selected { border-color: #ef4444; background: #450a0a; color: #fca5a5; }
+    .score-btn.s2.selected { border-color: #f97316; background: #431407; color: #fdba74; }
+    .score-btn.s3.selected { border-color: #eab308; background: #422006; color: #fde047; }
+    .score-btn.s4.selected { border-color: #84cc16; background: #1a2e05; color: #bef264; }
+    .score-btn.s5.selected { border-color: #22c55e; background: #052e16; color: #86efac; }
+
+    /* ─── CATATAN ─── */
+    .catatan-wrap label {
+      font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 6px;
+    }
+    .catatan-wrap textarea {
+      width: 100%; background: #0f172a;
+      border: 1px solid #334155; border-radius: 8px;
+      color: #e2e8f0; font-size: 0.82rem;
+      padding: 8px 10px; resize: vertical; min-height: 60px;
+    }
+    .catatan-wrap textarea:focus { outline: none; border-color: #3b82f6; }
+
+    /* ─── SCORE RESULT ─── */
+    .score-result {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .result-label-text {
+      font-size: 1.5rem; font-weight: 800; letter-spacing: 1px;
+      display: block; margin-bottom: 4px;
+    }
+    .result-score { font-size: 0.85rem; color: #94a3b8; }
+    .label-baik { color: #4ade80; }
+    .label-sedang { color: #fbbf24; }
+    .label-kurang { color: #f87171; }
+    .label-none { color: #475569; }
+
+    /* ─── ACTION BUTTONS ─── */
+    .action-buttons { display: flex; gap: 10px; }
+    .btn-save {
+      flex: 2; padding: 12px;
+      background: linear-gradient(135deg,#2563eb,#1d4ed8);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-save:hover { opacity: 0.9; }
+    .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-skip {
+      flex: 1; padding: 12px;
+      background: #334155; color: #94a3b8;
+      border: none; border-radius: 10px;
+      font-size: 0.85rem; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-skip:hover { background: #475569; }
+
+    /* ─── TOAST ─── */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #166534; color: #dcfce7;
+      padding: 10px 22px; border-radius: 20px;
+      font-size: 0.88rem; font-weight: 600;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 999;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    #toast.show { opacity: 1; }
+
+    /* ─── EXPORT BAR ─── */
+    .export-bar {
+      background: #1e293b;
+      border-top: 1px solid #334155;
+      padding: 12px 18px;
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-top: auto;
+    }
+    .btn-export {
+      flex: 1; padding: 10px;
+      background: linear-gradient(135deg,#059669,#047857);
+      color: #fff; border: none; border-radius: 8px;
+      font-size: 0.85rem; font-weight: 700; cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-export:hover { opacity: 0.85; }
+    .btn-reset {
+      padding: 10px 16px;
+      background: #450a0a; color: #fca5a5;
+      border: 1px solid #7f1d1d; border-radius: 8px;
+      font-size: 0.82rem; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-reset:hover { background: #7f1d1d; }
+
+    /* ─── FILTER TOOLBAR ─── */
+    .filter-bar {
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      padding: 8px 16px;
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    }
+    .filter-btn {
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid #334155;
+      background: transparent; color: #94a3b8;
+      font-size: 0.78rem; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn.active { background: #1d4ed8; border-color: #3b82f6; color: #fff; }
+    .filter-label { font-size: 0.75rem; color: #64748b; }
+
+    /* ─── SCROLL / THUMBNAIL ─── */
+    .thumbnail-strip {
+      display: flex; gap: 4px; overflow-x: auto;
+      padding: 8px 16px; background: #1a2234;
+      border-top: 1px solid #334155;
+      scrollbar-width: thin;
+    }
+    .thumb-item {
+      width: 44px; height: 44px; flex-shrink: 0;
+      border-radius: 6px; overflow: hidden; cursor: pointer;
+      border: 2px solid transparent;
+      position: relative;
+    }
+    .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb-item.current { border-color: #3b82f6; }
+    .thumb-item.validated { border-color: #22c55e; }
+    .thumb-item .thumb-dot {
+      position: absolute; bottom: 2px; right: 2px;
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .thumb-dot.d-baik { background: #22c55e; }
+    .thumb-dot.d-sedang { background: #fbbf24; }
+    .thumb-dot.d-kurang { background: #ef4444; }
+
+    /* ─── MODAL DATA DIRI ─── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 999;
+      background: rgba(0,0,0,0.75);
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal-box {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      width: 100%; max-width: 480px;
+      padding: 28px 28px 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      animation: modalIn 0.2s ease;
+    }
+    @keyframes modalIn {
+      from { opacity:0; transform: scale(0.95) translateY(10px); }
+      to   { opacity:1; transform: scale(1) translateY(0); }
+    }
+    .modal-title {
+      font-size: 1.1rem; font-weight: 800;
+      margin-bottom: 4px; color: #e2e8f0;
+    }
+    .modal-subtitle {
+      font-size: 0.78rem; color: #94a3b8;
+      margin-bottom: 22px; line-height: 1.5;
+    }
+    .modal-field { margin-bottom: 16px; }
+    .modal-field label {
+      display: block; font-size: 0.8rem; font-weight: 600;
+      color: #93c5fd; margin-bottom: 6px;
+    }
+    .modal-field label span { color: #f87171; margin-left: 2px; }
+    .modal-field input, .modal-field select, .modal-field textarea {
+      width: 100%; background: #0f172a;
+      border: 1px solid #334155; border-radius: 8px;
+      color: #e2e8f0; font-size: 0.88rem;
+      padding: 9px 12px;
+      transition: border-color 0.15s;
+    }
+    .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus {
+      outline: none; border-color: #3b82f6;
+    }
+    .modal-field select option { background: #1e293b; }
+    .modal-field textarea { resize: vertical; min-height: 60px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-modal-save {
+      flex: 1; padding: 11px;
+      background: linear-gradient(135deg,#2563eb,#1d4ed8);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+    }
+    .btn-modal-save:hover { opacity: 0.9; }
+    .btn-modal-cancel {
+      padding: 11px 18px;
+      background: #334155; color: #94a3b8;
+      border: none; border-radius: 10px;
+      font-size: 0.88rem; cursor: pointer;
+    }
+    .btn-modal-cancel:hover { background: #475569; }
+
+    /* ─── VALIDATOR INFO CHIP DI HEADER ─── */
+    .validator-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px; padding: 5px 12px 5px 8px;
+      cursor: pointer; font-size: 0.8rem;
+      transition: background 0.15s;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .validator-chip:hover { background: rgba(255,255,255,0.18); }
+    .validator-chip .vc-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #2563eb; display: flex; align-items: center;
+      justify-content: center; font-size: 0.85rem; font-weight: 800;
+      flex-shrink: 0;
+    }
+    .validator-chip .vc-name { font-weight: 700; max-width: 130px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .validator-chip .vc-role { color: #93c5fd; font-size: 0.72rem; }
+    .validator-chip .vc-edit { font-size: 0.7rem; color: #64748b; margin-left: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- MODAL DATA DIRI VALIDATOR -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">👤 Data Diri Validator</div>
+    <div class="modal-subtitle">
+      Isi data diri Anda sebelum memulai penilaian.<br>
+      Data ini akan tercantum dalam file CSV hasil validasi.
+    </div>
+
+    <div class="modal-field">
+      <label for="vNama">Nama Lengkap <span>*</span></label>
+      <input type="text" id="vNama" placeholder="cth. Dr. Budi Santoso, M.Ds." />
+    </div>
+
+    <div class="modal-field">
+      <label for="vLatar">Latar Belakang / Profesi <span>*</span></label>
+      <select id="vLatar">
+        <option value="">— Pilih profesi —</option>
+        <option value="Dosen Desain Komunikasi Visual">Dosen Desain Komunikasi Visual</option>
+        <option value="Praktisi Desain Grafis">Praktisi Desain Grafis</option>
+        <option value="Praktisi Desain Grafis & Evaluasi Desain Komunikasi Visual">Praktisi DKV & Evaluasi Desain</option>
+        <option value="Desainer UI/UX">Desainer UI/UX</option>
+        <option value="Fotografer & Desainer Konten">Fotografer & Desainer Konten</option>
+        <option value="Mahasiswa S2/S3 Desain">Mahasiswa S2/S3 Desain</option>
+        <option value="Peneliti Komunikasi Visual">Peneliti Komunikasi Visual</option>
+        <option value="Lainnya">Lainnya (isi di bawah)</option>
+      </select>
+    </div>
+
+    <div class="modal-field" id="vLatarCustomWrap" style="display:none;">
+      <label for="vLatarCustom">Profesi (isi manual)</label>
+      <input type="text" id="vLatarCustom" placeholder="Tuliskan profesi Anda..." />
+    </div>
+
+    <div class="modal-field">
+      <label for="vInstansi">Institusi / Universitas</label>
+      <input type="text" id="vInstansi" placeholder="cth. Universitas Andalas" />
+    </div>
+
+    <div class="modal-field">
+      <label for="vTanggal">Tanggal Mulai Menilai <span>*</span></label>
+      <input type="date" id="vTanggal" />
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-modal-save" onclick="saveValidatorProfile()">✓ Simpan & Mulai Validasi</button>
+      <button class="btn-modal-cancel" id="btnModalCancel" onclick="closeModal()" style="display:none">Batal</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div>
+    <h1>🎨 Validator Kualitas Desain Konten Instagram</h1>
+    <small>Klasifikasi CNN — Rubrik: Keseimbangan · Kesatuan · Tipografi · Warna</small>
+  </div>
+  <div class="header-stats">
+    <div class="stat-pill">Total <span id="statTotal">0</span></div>
+    <div class="stat-pill" style="color:#86efac">✓ Tervalidasi <span id="statDone">0</span></div>
+    <div class="stat-pill" style="color:#fca5a5">◯ Belum <span id="statLeft">0</span></div>
+    <div class="validator-chip" onclick="openModal()" title="Klik untuk edit data diri">
+      <div class="vc-avatar" id="vcAvatar">?</div>
+      <div>
+        <div class="vc-name" id="vcName">— Belum diisi —</div>
+        <div class="vc-role" id="vcRole">Klik untuk isi data diri</div>
+      </div>
+      <div class="vc-edit">✏</div>
+    </div>
+  </div>
+</header>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="progress-bar-outer">
+    <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">0 / 0</div>
+</div>
+
+<main>
+  <!-- LEFT PANEL: IMAGE -->
+  <section class="image-panel">
+
+    <div class="filter-bar">
+      <span class="filter-label">Tampilkan:</span>
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">Semua</button>
+      <button class="filter-btn" data-filter="unvalidated" onclick="setFilter('unvalidated',this)">Belum dinilai</button>
+      <button class="filter-btn" data-filter="organisasi" onclick="setFilter('organisasi',this)">Organisasi</button>
+      <button class="filter-btn" data-filter="umkm" onclick="setFilter('umkm',this)">UMKM</button>
+    </div>
+
+    <div class="image-nav">
+      <button id="btnPrev" onclick="goTo(currentIndex - 1)">‹ Sebelumnya</button>
+      <div class="nav-info">
+        <strong id="navCurrent">—</strong>
+        <small id="navFiltered"></small>
+      </div>
+      <span id="validatedBadge" class="nav-validated" style="display:none">✓ Sudah dinilai</span>
+      <div class="jump-wrap">
+        <input type="number" id="jumpInput" placeholder="No" min="1" onkeydown="if(event.key==='Enter')jumpTo()"/>
+        <button onclick="jumpTo()">Go</button>
+      </div>
+      <button id="btnNext" onclick="goTo(currentIndex + 1)">Berikutnya ›</button>
+    </div>
+
+    <div class="image-container" id="imageContainer" onclick="toggleZoom()">
+      <img id="mainImage" src="" alt="Citra" draggable="false"/>
+    </div>
+
+    <div class="image-info-bar">
+      <span class="file-name" id="infoFilename">—</span>
+      <span class="cat-badge" id="infoCat">—</span>
+    </div>
+
+    <!-- THUMBNAIL STRIP -->
+    <div class="thumbnail-strip" id="thumbStrip"></div>
+
+  </section>
+
+  <!-- RIGHT PANEL: FORM -->
+  <section class="form-panel">
+    <div class="form-inner">
+
+      <!-- RUBRIK COLLAPSIBLE -->
+      <div class="rubrik-toggle">
+        <div class="rubrik-header" id="rubrikHeader" onclick="toggleRubrik()">
+          📋 Rubrik Penilaian (skor 1–5)
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 10.94L2.47 5.47l1.06-1.06L8 8.82l4.47-4.41 1.06 1.06z"/>
+          </svg>
+        </div>
+        <div class="rubrik-body" id="rubrikBody">
+          <div class="rubrik-cards">
+
+            <!-- Keseimbangan -->
+            <div class="rubrik-card">
+              <div class="rubrik-card-title">📌 Keseimbangan — Distribusi elemen</div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s5">5</span><span class="rubrik-score-desc">Elemen utama tersebar seimbang; pusat perhatian di sekitar tengah.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s4">4</span><span class="rubrik-score-desc">Hampir seimbang; sedikit condong ke satu sisi.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s3">3</span><span class="rubrik-score-desc">Agak berat sebelah tetapi masih nyaman dilihat.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s2">2</span><span class="rubrik-score-desc">Jelas berat sebelah; ruang kosong tidak terpakai.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s1">1</span><span class="rubrik-score-desc">Sangat timpang; elemen menumpuk di satu sisi.</span></div>
+            </div>
+
+            <!-- Kesatuan -->
+            <div class="rubrik-card">
+              <div class="rubrik-card-title">📌 Kesatuan — Keterpaduan gaya & warna</div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s5">5</span><span class="rubrik-score-desc">Warna, gaya, dan elemen tampak satu kesatuan.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s4">4</span><span class="rubrik-score-desc">Hampir menyatu; ada satu elemen yang sedikit berbeda.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s3">3</span><span class="rubrik-score-desc">Beberapa elemen terasa kurang menyatu.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s2">2</span><span class="rubrik-score-desc">Banyak elemen berbeda gaya atau warna.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s1">1</span><span class="rubrik-score-desc">Elemen tampak acak dan terpisah-pisah.</span></div>
+            </div>
+
+            <!-- Tipografi -->
+            <div class="rubrik-card">
+              <div class="rubrik-card-title">📌 Tipografi — Keterbacaan huruf</div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s5">5</span><span class="rubrik-score-desc">1–2 jenis huruf; semua teks terbaca jelas; hierarki judul dan isi jelas.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s4">4</span><span class="rubrik-score-desc">Teks terbaca jelas; ada sedikit teks yang kecil atau 3 jenis huruf.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s3">3</span><span class="rubrik-score-desc">Sebagian teks sulit dibaca atau 3–4 jenis huruf.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s2">2</span><span class="rubrik-score-desc">Banyak jenis huruf atau banyak teks terlalu kecil.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s1">1</span><span class="rubrik-score-desc">Teks sulit dibaca; jenis huruf bercampur tanpa aturan.</span></div>
+            </div>
+
+            <!-- Warna -->
+            <div class="rubrik-card">
+              <div class="rubrik-card-title">📌 Warna — Kontras & palet</div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s5">5</span><span class="rubrik-score-desc">Kontras teks dan latar tinggi; palet terbatas (sekitar 3 warna dominan) dan serasi.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s4">4</span><span class="rubrik-score-desc">Kontras baik; sekitar 4 warna dominan.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s3">3</span><span class="rubrik-score-desc">Kontras cukup; sekitar 5 warna dominan.</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s2">2</span><span class="rubrik-score-desc">Kontras rendah atau warna terlalu ramai (6 warna atau lebih).</span></div>
+              <div class="rubrik-score-row"><span class="rubrik-skor-badge rb-s1">1</span><span class="rubrik-score-desc">Teks nyaris tak terbaca; warna bertabrakan.</span></div>
+            </div>
+
+          </div>
+          <div style="margin-top:8px;font-size:0.72rem;color:#94a3b8;">
+            <b>Batas label:</b>
+            <span style="color:#f87171">Kurang baik</span> 1.0–2.34 &nbsp;|&nbsp;
+            <span style="color:#fbbf24">Sedang</span> 2.35–3.74 &nbsp;|&nbsp;
+            <span style="color:#4ade80">Baik</span> 3.75–5.0
+          </div>
+        </div>
+      </div>
+
+      <!-- INDICATORS -->
+      <div class="indicators-section" id="indicatorsSection">
+        <!-- Generated by JS -->
+      </div>
+
+      <!-- CATATAN -->
+      <div class="catatan-wrap">
+        <label for="catatanInput">📝 Catatan (opsional)</label>
+        <textarea id="catatanInput" placeholder="Isi bila citra bermasalah, ragu, atau ada catatan khusus..."></textarea>
+      </div>
+
+      <!-- SCORE RESULT -->
+      <div class="score-result">
+        <span class="result-label-text label-none" id="resultLabel">— Belum Dinilai —</span>
+        <div class="result-score" id="resultScore"></div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="action-buttons">
+        <button class="btn-save" id="btnSave" onclick="saveAndNext()">💾 Simpan &amp; Lanjut</button>
+        <button class="btn-skip" onclick="goTo(currentIndex + 1)">Lewati →</button>
+      </div>
+
+    </div><!-- /form-inner -->
+
+    <!-- EXPORT -->
+    <div class="export-bar">
+      <button class="btn-export" onclick="exportCSV()">⬇ Ekspor CSV Hasil Validasi</button>
+      <button class="btn-reset" onclick="resetAll()" title="Hapus semua data penilaian">🗑 Reset</button>
+    </div>
+
+  </section>
+</main>
+
+<div id="toast">✓ Tersimpan!</div>
+
+<script>
+// ──────────────────────────────────────────
+//  DATA & STATE
+// ──────────────────────────────────────────
+const INDICATORS = [
+  { key: 'keseimbangan', label: 'Keseimbangan', desc: 'Distribusi elemen' },
+  { key: 'kesatuan',     label: 'Kesatuan',     desc: 'Keterpaduan gaya & warna' },
+  { key: 'tipografi',    label: 'Tipografi',    desc: 'Keterbacaan huruf' },
+  { key: 'warna',        label: 'Warna',        desc: 'Kontras & palet' },
+];
+
+const LABEL_THRESHOLDS = { baik: 3.75, sedang: 2.35 };
+
+const STORAGE_KEY = 'validator_v2_results';
+const PROFILE_KEY = 'validator_v2_profile';
+
+let results    = {}; // { filename: { keseimbangan, kesatuan, tipografi, warna, catatan, label, skor } }
+let validatorProfile = { nama: '', latar: '', instansi: '', tanggal: '' };
+let currentIndex = 0;
+let currentFilter = 'all';
+let filteredList = [];
+
+// ──────────────────────────────────────────
+//  INIT
+// ──────────────────────────────────────────
+function init() {
+  // Load saved results from localStorage
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) results = JSON.parse(saved);
+  } catch(e) {}
+
+  // Load validator profile
+  try {
+    const savedProfile = localStorage.getItem(PROFILE_KEY);
+    if (savedProfile) validatorProfile = JSON.parse(savedProfile);
+  } catch(e) {}
+
+  buildIndicators();
+  applyFilter();
+  buildThumbnails();
+  updateStats();
+  updateValidatorChip();
+  goTo(0);
+
+  // Tampilkan modal jika profil belum diisi
+  if (!validatorProfile.nama) {
+    openModal(true); // true = wajib isi, tidak bisa tutup
+  }
+}
+
+// ──────────────────────────────────────────
+//  FILTER
+// ──────────────────────────────────────────
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilter();
+  goTo(0);
+}
+
+function applyFilter() {
+  filteredList = window.DATASET_IMAGES.filter(item => {
+    if (currentFilter === 'all') return true;
+    if (currentFilter === 'unvalidated') return !results[item.filename];
+    if (currentFilter === 'organisasi') return item.category === 'Organisasi';
+    if (currentFilter === 'umkm') return item.category === 'UMKM';
+    return true;
+  });
+}
+
+// ──────────────────────────────────────────
+//  NAVIGATION
+// ──────────────────────────────────────────
+function goTo(idx) {
+  if (filteredList.length === 0) return;
+  idx = Math.max(0, Math.min(filteredList.length - 1, idx));
+  currentIndex = idx;
+  renderImage();
+  renderForm();
+  updateNavButtons();
+  scrollThumbIntoView();
+}
+
+function jumpTo() {
+  const val = parseInt(document.getElementById('jumpInput').value);
+  if (isNaN(val)) return;
+  // Find in filteredList by global no
+  const idx = filteredList.findIndex(it => it.no === val);
+  if (idx >= 0) goTo(idx);
+  else {
+    // try filtered index
+    goTo(val - 1);
+  }
+  document.getElementById('jumpInput').value = '';
+}
+
+// ──────────────────────────────────────────
+//  RENDER
+// ──────────────────────────────────────────
+function renderImage() {
+  const item = filteredList[currentIndex];
+  if (!item) return;
+  const img = document.getElementById('mainImage');
+  img.src = 'images/' + item.filename;
+  document.getElementById('infoFilename').textContent = item.filename;
+  const catEl = document.getElementById('infoCat');
+  catEl.textContent = item.category;
+  catEl.className = 'cat-badge cat-' + item.category.toLowerCase();
+
+  // Nav info
+  document.getElementById('navCurrent').textContent = item.id + ' / No.' + item.no;
+  document.getElementById('navFiltered').textContent =
+    (currentIndex + 1) + ' dari ' + filteredList.length + ' (filter: ' + currentFilter + ')';
+
+  // Validated badge
+  const badge = document.getElementById('validatedBadge');
+  badge.style.display = results[item.filename] ? 'inline-flex' : 'none';
+
+  // Thumbnail highlight
+  document.querySelectorAll('.thumb-item').forEach((el, i) => {
+    el.classList.toggle('current', el.dataset.filename === item.filename);
+  });
+
+  // Reset zoom
+  img.style.transform = 'scale(1)';
+  document.getElementById('imageContainer').classList.remove('zoomed');
+}
+
+function renderForm() {
+  const item = filteredList[currentIndex];
+  if (!item) return;
+  const saved = results[item.filename];
+
+  INDICATORS.forEach(ind => {
+    const val = saved ? saved[ind.key] : null;
+    document.querySelectorAll(`.score-btn[data-ind="${ind.key}"]`).forEach(btn => {
+      btn.classList.toggle('selected', parseInt(btn.dataset.score) === val);
+    });
+  });
+
+  document.getElementById('catatanInput').value = saved ? (saved.catatan || '') : '';
+  updateScoreDisplay(saved ? saved.skor : null, saved ? saved.label : null);
+}
+
+function updateScoreDisplay(skor, label) {
+  const lEl = document.getElementById('resultLabel');
+  const sEl = document.getElementById('resultScore');
+  if (skor === null || skor === undefined) {
+    lEl.textContent = '— Belum Dinilai —';
+    lEl.className = 'result-label-text label-none';
+    sEl.textContent = '';
+    return;
+  }
+  lEl.textContent = label;
+  sEl.textContent = 'Skor: ' + skor.toFixed(2) + ' | Rata-rata 4 indikator';
+  if (label === 'Baik') lEl.className = 'result-label-text label-baik';
+  else if (label === 'Sedang') lEl.className = 'result-label-text label-sedang';
+  else lEl.className = 'result-label-text label-kurang';
+}
+
+function updateNavButtons() {
+  document.getElementById('btnPrev').disabled = currentIndex <= 0;
+  document.getElementById('btnNext').disabled = currentIndex >= filteredList.length - 1;
+}
+
+function updateStats() {
+  const total = window.DATASET_IMAGES.length;
+  const done = Object.keys(results).length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statDone').textContent  = done;
+  document.getElementById('statLeft').textContent  = total - done;
+  document.getElementById('progressBar').style.width = (total > 0 ? (done/total)*100 : 0) + '%';
+  document.getElementById('progressLabel').textContent = done + ' / ' + total;
+}
+
+// ──────────────────────────────────────────
+//  INDICATOR BUTTONS BUILD
+// ──────────────────────────────────────────
+const SCORE_LABELS = { 1:'Sangat Kurang', 2:'Kurang', 3:'Cukup', 4:'Baik', 5:'Sangat Baik' };
+
+function buildIndicators() {
+  const container = document.getElementById('indicatorsSection');
+  container.innerHTML = '';
+  INDICATORS.forEach(ind => {
+    const card = document.createElement('div');
+    card.className = 'indicator-card';
+    card.innerHTML = `<div class="indicator-title">📌 ${ind.label} <small style="color:#64748b;font-weight:400">— ${ind.desc}</small></div>
+      <div class="score-buttons">
+        ${[1,2,3,4,5].map(s => `
+          <button class="score-btn s${s}" data-ind="${ind.key}" data-score="${s}"
+            onclick="selectScore('${ind.key}',${s})"
+            title="Skor ${s}: ${SCORE_LABELS[s]}">
+            ${s}
+            <small>${SCORE_LABELS[s]}</small>
+          </button>
+        `).join('')}
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function selectScore(indKey, score) {
+  document.querySelectorAll(`.score-btn[data-ind="${indKey}"]`).forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.score) === score);
+  });
+  recalcLive();
+}
+
+function recalcLive() {
+  const scores = getScores();
+  if (Object.keys(scores).length < 4) return;
+  const vals = Object.values(scores);
+  const skor = vals.reduce((a,b) => a+b, 0) / vals.length;
+  const label = skor >= LABEL_THRESHOLDS.baik ? 'Baik'
+              : skor >= LABEL_THRESHOLDS.sedang ? 'Sedang' : 'Kurang baik';
+  updateScoreDisplay(skor, label);
+}
+
+function getScores() {
+  const scores = {};
+  INDICATORS.forEach(ind => {
+    const sel = document.querySelector(`.score-btn[data-ind="${ind.key}"].selected`);
+    if (sel) scores[ind.key] = parseInt(sel.dataset.score);
+  });
+  return scores;
+}
+
+// ──────────────────────────────────────────
+//  SAVE
+// ──────────────────────────────────────────
+function saveAndNext() {
+  const item = filteredList[currentIndex];
+  if (!item) return;
+  const scores = getScores();
+  if (Object.keys(scores).length < 4) {
+    showToast('⚠ Isi semua 4 indikator terlebih dahulu!', '#b45309');
+    return;
+  }
+  const catatan = document.getElementById('catatanInput').value.trim();
+  const vals = Object.values(scores);
+  const skor = vals.reduce((a,b) => a+b, 0) / vals.length;
+  const label = skor >= LABEL_THRESHOLDS.baik ? 'Baik'
+              : skor >= LABEL_THRESHOLDS.sedang ? 'Sedang' : 'Kurang baik';
+
+  results[item.filename] = {
+    no: item.no, id: item.id, filename: item.filename,
+    category: item.category, account: item.account,
+    keseimbangan: scores.keseimbangan,
+    kesatuan: scores.kesatuan,
+    tipografi: scores.tipografi,
+    warna: scores.warna,
+    skor, label, catatan,
+    timestamp: new Date().toISOString()
+  };
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(results));
+  updateStats();
+  updateThumbnail(item.filename, label);
+  showToast('✓ Tersimpan! ' + item.id + ' → ' + label);
+  document.getElementById('validatedBadge').style.display = 'inline-flex';
+
+  // Auto advance
+  setTimeout(() => {
+    if (currentIndex < filteredList.length - 1) goTo(currentIndex + 1);
+    else { applyFilter(); goTo(currentIndex); }
+  }, 400);
+}
+
+// ──────────────────────────────────────────
+//  THUMBNAIL STRIP
+// ──────────────────────────────────────────
+function buildThumbnails() {
+  const strip = document.getElementById('thumbStrip');
+  strip.innerHTML = '';
+  window.DATASET_IMAGES.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'thumb-item' + (results[item.filename] ? ' validated' : '');
+    div.dataset.filename = item.filename;
+    div.title = item.id + ': ' + item.filename;
+    div.onclick = () => {
+      const idx = filteredList.findIndex(it => it.filename === item.filename);
+      if (idx >= 0) goTo(idx);
+      else {
+        // switch to all filter and find
+        setFilter('all', document.querySelector('.filter-btn[data-filter="all"]'));
+        setTimeout(() => {
+          const idx2 = filteredList.findIndex(it => it.filename === item.filename);
+          goTo(idx2 >= 0 ? idx2 : 0);
+        }, 50);
+      }
+    };
+    const img = document.createElement('img');
+    img.src = 'images/' + item.filename;
+    img.loading = 'lazy';
+    div.appendChild(img);
+    if (results[item.filename]) {
+      const dot = document.createElement('div');
+      const lbl = results[item.filename].label;
+      dot.className = 'thumb-dot ' + (lbl === 'Baik' ? 'd-baik' : lbl === 'Sedang' ? 'd-sedang' : 'd-kurang');
+      div.appendChild(dot);
+    }
+    strip.appendChild(div);
+  });
+}
+
+function updateThumbnail(filename, label) {
+  const el = document.querySelector(`.thumb-item[data-filename="${filename}"]`);
+  if (!el) return;
+  el.classList.add('validated');
+  let dot = el.querySelector('.thumb-dot');
+  if (!dot) { dot = document.createElement('div'); el.appendChild(dot); }
+  dot.className = 'thumb-dot ' + (label === 'Baik' ? 'd-baik' : label === 'Sedang' ? 'd-sedang' : 'd-kurang');
+}
+
+function scrollThumbIntoView() {
+  const item = filteredList[currentIndex];
+  if (!item) return;
+  const el = document.querySelector(`.thumb-item[data-filename="${item.filename}"]`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+}
+
+// ──────────────────────────────────────────
+//  ZOOM
+// ──────────────────────────────────────────
+function toggleZoom() {
+  const img = document.getElementById('mainImage');
+  const c   = document.getElementById('imageContainer');
+  if (c.classList.contains('zoomed')) {
+    img.style.transform = 'scale(1)';
+    c.classList.remove('zoomed');
+  } else {
+    img.style.transform = 'scale(1.9)';
+    c.classList.add('zoomed');
+  }
+}
+
+// ──────────────────────────────────────────
+//  RUBRIK TOGGLE
+// ──────────────────────────────────────────
+function toggleRubrik() {
+  const body = document.getElementById('rubrikBody');
+  const header = document.getElementById('rubrikHeader');
+  body.classList.toggle('show');
+  header.classList.toggle('open');
+}
+
+// ──────────────────────────────────────────
+//  TOAST
+// ──────────────────────────────────────────
+let toastTimer;
+function showToast(msg, bg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = bg || '#166534';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ──────────────────────────────────────────
+//  EXPORT CSV
+// ──────────────────────────────────────────
+function exportCSV() {
+  const valData = Object.values(results).sort((a, b) => a.no - b.no);
+  if (valData.length === 0) {
+    showToast('⚠ Belum ada data yang dinilai!', '#b45309');
+    return;
+  }
+
+  const now = new Date();
+  const tanggal = validatorProfile.tanggal
+    ? new Date(validatorProfile.tanggal).toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' })
+    : now.toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+
+  const namaValidator = validatorProfile.nama || 'Validator Ahli';
+  const latarValidator = validatorProfile.latar || 'Praktisi Desain Grafis & Evaluasi Desain Komunikasi Visual';
+  const instansiValidator = validatorProfile.instansi ? ' — ' + validatorProfile.instansi : '';
+
+  // Count labels
+  const cBaik   = valData.filter(r => r.label === 'Baik').length;
+  const cSedang  = valData.filter(r => r.label === 'Sedang').length;
+  const cKurang  = valData.filter(r => r.label === 'Kurang baik').length;
+  const avg = k => (valData.reduce((s,r) => s + r[k], 0) / valData.length).toFixed(2);
+
+  const rows = [];
+
+  // Header metadata
+  rows.push(['FORM PENILAIAN KUALITAS DESAIN KONTEN INSTAGRAM', '']);
+  rows.push(['Penelitian: Klasifikasi Kualitas Desain Konten Instagram Menggunakan Metode CNN', '']);
+  rows.push([]);
+  rows.push(['Nama penilai', namaValidator + instansiValidator]);
+  rows.push(['Tanggal mulai menilai', tanggal]);
+  rows.push(['Latar belakang penilai', latarValidator]);
+  rows.push([]);
+  rows.push(['CARA MENGISI', '']);
+  rows.push([1, 'Buka lembar "Rubrik" dan baca deskripsi skor 1-5 untuk empat indikator.']);
+  rows.push([2, 'Buka citra sesuai ID dan nama file di lembar "Form Penilaian".']);
+  rows.push([3, 'Beri skor 1-5 untuk tiap indikator (Keseimbangan, Kesatuan, Tipografi, Warna).']);
+  rows.push([4, 'Skor akhir dan label (Baik/Sedang/Kurang baik) terisi otomatis.']);
+  rows.push([5, 'Kolom Catatan boleh dikosongkan; isi bila ragu atau citra bermasalah.']);
+  rows.push([]);
+  rows.push(['ATURAN PENILAIAN', '']);
+  rows.push(['a', 'Nilai hanya tampilan visual citra. Abaikan like, komentar, nama akun, dan caption.']);
+  rows.push(['b', 'Nilai secara mandiri.']);
+  rows.push(['c', 'Nilai berdasarkan rubrik, bukan selera pribadi.']);
+  rows.push(['d', 'Skor tiap indikator bilangan bulat 1-5.']);
+  rows.push([]);
+  rows.push(['RUBRIK PENILAIAN (skor 1-5)', '', '', '', '', '']);
+  rows.push([]);
+  rows.push(['Indikator','5 (Sangat baik)','4 (Baik)','3 (Cukup)','2 (Kurang)','1 (Sangat kurang)']);
+  rows.push(['Keseimbangan (distribusi elemen)',
+    'Elemen utama tersebar seimbang; pusat perhatian di sekitar tengah.',
+    'Hampir seimbang; sedikit condong ke satu sisi.',
+    'Agak berat sebelah tetapi masih nyaman dilihat.',
+    'Jelas berat sebelah; ruang kosong tidak terpakai.',
+    'Sangat timpang; elemen menumpuk di satu sisi.']);
+  rows.push(['Kesatuan (keterpaduan gaya dan warna)',
+    'Warna, gaya, dan elemen tampak satu kesatuan.',
+    'Hampir menyatu; ada satu elemen yang sedikit berbeda.',
+    'Beberapa elemen terasa kurang menyatu.',
+    'Banyak elemen berbeda gaya atau warna.',
+    'Elemen tampak acak dan terpisah-pisah.']);
+  rows.push(['Tipografi (huruf dan keterbacaan)',
+    '1-2 jenis huruf; semua teks terbaca jelas; hierarki judul dan isi jelas.',
+    'Teks terbaca jelas; ada sedikit teks yang kecil atau 3 jenis huruf.',
+    'Sebagian teks sulit dibaca atau 3-4 jenis huruf.',
+    'Banyak jenis huruf atau banyak teks terlalu kecil.',
+    'Teks sulit dibaca; jenis huruf bercampur tanpa aturan.']);
+  rows.push(['Warna (kontras dan palet)',
+    'Kontras teks dan latar tinggi; palet terbatas (sekitar 3 warna dominan) dan serasi.',
+    'Kontras baik; sekitar 4 warna dominan.',
+    'Kontras cukup; sekitar 5 warna dominan.',
+    'Kontras rendah atau warna terlalu ramai (6 atau lebih).',
+    'Teks nyaris tak terbaca; warna bertabrakan.']);
+  rows.push([]);
+  rows.push(['BATAS LABEL (skor akhir = rata-rata empat indikator)', '', '', '', '', '']);
+  rows.push(['Kurang baik', '1,0 - 2,3', 'Batas atas dipakai rumus:', '2.35', '', '']);
+  rows.push(['Sedang', '2,4 - 3,7', 'Batas atas dipakai rumus:', '3.75', '', '']);
+  rows.push(['Baik', '3,8 - 5,0', '', '', '', '']);
+  rows.push([]);
+  rows.push(['No','ID Citra','Nama File','Keseimbangan (1-5)','Kesatuan (1-5)','Tipografi (1-5)','Warna (1-5)','Skor Akhir','Label','Catatan']);
+
+  // Data rows
+  valData.forEach((r, i) => {
+    rows.push([
+      i + 1, r.id, r.filename,
+      r.keseimbangan, r.kesatuan, r.tipografi, r.warna,
+      r.skor.toFixed(2), r.label, r.catatan || ''
+    ]);
+  });
+
+  // Summary
+  rows.push([]);
+  rows.push(['REKAP PENILAIAN', '']);
+  rows.push([]);
+  rows.push(['Nama penilai', namaValidator + instansiValidator]);
+  rows.push(['Citra sudah dinilai lengkap', valData.length]);
+  rows.push(['Sisa belum dinilai', window.DATASET_IMAGES.length - valData.length]);
+  rows.push(['Label Baik', cBaik]);
+  rows.push(['Label Sedang', cSedang]);
+  rows.push(['Label Kurang baik', cKurang]);
+  rows.push(['Rata-rata Keseimbangan', avg('keseimbangan')]);
+  rows.push(['Rata-rata Kesatuan', avg('kesatuan')]);
+  rows.push(['Rata-rata Tipografi', avg('tipografi')]);
+  rows.push(['Rata-rata Warna', avg('warna')]);
+
+  // Convert to CSV string
+  function escapeCSV(v) {
+    if (v === undefined || v === null) return '';
+    const s = String(v);
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  const csvString = rows.map(row =>
+    (Array.isArray(row) ? row : [row]).map(escapeCSV).join(',')
+  ).join('\r\n');
+
+  // Add BOM for Excel UTF-8
+  const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = 'FORM_PENILAIAN_VALIDASI_' + valData.length + '_CITRA.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('⬇ CSV berhasil diunduh! (' + valData.length + ' citra)');
+}
+
+// ──────────────────────────────────────────
+//  RESET
+// ──────────────────────────────────────────
+function resetAll() {
+  if (!confirm('⚠ Hapus SEMUA data penilaian yang sudah tersimpan? Tindakan ini tidak dapat dibatalkan.')) return;
+  results = {};
+  localStorage.removeItem(STORAGE_KEY);
+  buildThumbnails();
+  updateStats();
+  applyFilter();
+  goTo(0);
+  showToast('🗑 Semua data penilaian dihapus.', '#7f1d1d');
+}
+
+// ──────────────────────────────────────────
+//  MODAL DATA DIRI VALIDATOR
+// ──────────────────────────────────────────
+let modalRequired = false;
+
+function openModal(required = false) {
+  modalRequired = required;
+  const overlay = document.getElementById('modalOverlay');
+  const cancelBtn = document.getElementById('btnModalCancel');
+  overlay.classList.remove('hidden');
+  cancelBtn.style.display = required ? 'none' : 'block';
+
+  // Set today's date as default if empty
+  const tInput = document.getElementById('vTanggal');
+  const today = new Date().toISOString().split('T')[0];
+  tInput.value = validatorProfile.tanggal || today;
+
+  // Fill existing values
+  document.getElementById('vNama').value     = validatorProfile.nama     || '';
+  document.getElementById('vInstansi').value = validatorProfile.instansi || '';
+
+  const lSelect = document.getElementById('vLatar');
+  const lCustom = document.getElementById('vLatarCustom');
+  const lCustomWrap = document.getElementById('vLatarCustomWrap');
+
+  // Check if saved latar matches a select option
+  const optionValues = Array.from(lSelect.options).map(o => o.value);
+  if (optionValues.includes(validatorProfile.latar)) {
+    lSelect.value = validatorProfile.latar;
+    lCustomWrap.style.display = 'none';
+  } else if (validatorProfile.latar) {
+    lSelect.value = 'Lainnya';
+    lCustom.value = validatorProfile.latar;
+    lCustomWrap.style.display = 'block';
+  }
+
+  // Show/hide custom field based on select
+  lSelect.onchange = () => {
+    lCustomWrap.style.display = lSelect.value === 'Lainnya' ? 'block' : 'none';
+  };
+
+  document.getElementById('vNama').focus();
+}
+
+function closeModal() {
+  if (modalRequired) return; // Tidak bisa tutup jika wajib
+  document.getElementById('modalOverlay').classList.add('hidden');
+}
+
+function saveValidatorProfile() {
+  const nama   = document.getElementById('vNama').value.trim();
+  const latarSel = document.getElementById('vLatar').value;
+  const latar  = latarSel === 'Lainnya'
+    ? document.getElementById('vLatarCustom').value.trim()
+    : latarSel;
+  const instansi = document.getElementById('vInstansi').value.trim();
+  const tanggal  = document.getElementById('vTanggal').value;
+
+  if (!nama) {
+    document.getElementById('vNama').focus();
+    document.getElementById('vNama').style.borderColor = '#ef4444';
+    return;
+  }
+  if (!latar) {
+    document.getElementById('vLatar').style.borderColor = '#ef4444';
+    return;
+  }
+
+  validatorProfile = { nama, latar, instansi, tanggal };
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(validatorProfile));
+  document.getElementById('modalOverlay').classList.add('hidden');
+  modalRequired = false;
+  updateValidatorChip();
+  showToast('✓ Data diri tersimpan!');
+}
+
+function updateValidatorChip() {
+  const nama = validatorProfile.nama || '—';
+  const latar = validatorProfile.latar || 'Klik untuk isi data diri';
+  document.getElementById('vcName').textContent = nama;
+  document.getElementById('vcRole').textContent = latar;
+  // Avatar: inisial 1-2 huruf
+  const inisial = nama.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase() || '?';
+  document.getElementById('vcAvatar').textContent = inisial;
+}
+
+// ──────────────────────────────────────────
+//  KEYBOARD SHORTCUTS
+// ──────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+  if (e.key === 'ArrowRight' || e.key === 'd') goTo(currentIndex + 1);
+  if (e.key === 'ArrowLeft'  || e.key === 'a') goTo(currentIndex - 1);
+  if (e.key === 'Enter' || e.key === 's') saveAndNext();
+
+  // Shortcuts: 1-5 for indicators in order
+  const iMap = { '1':0, '2':1, '3':2, '4':3 }; // number selects indicator row
+  // Q W E R T = skor 1 2 3 4 5 for currently focused indicator (not implemented for simplicity)
+});
+
+// ──────────────────────────────────────────
+//  START
+// ──────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
